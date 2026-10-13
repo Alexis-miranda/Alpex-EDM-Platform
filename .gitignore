@@ -1,0 +1,9 @@
+# Ignore local security credentials
+.env
+
+# Ignore temporary build and storage folders
+target/
+.idea/
+postgres_data/
+*.class
+*.jar

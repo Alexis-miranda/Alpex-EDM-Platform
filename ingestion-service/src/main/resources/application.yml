@@ -1,0 +1,20 @@
+server:
+  port: 8081 #  run on port 8081
+
+spring:
+  application:
+    name: alpex-ingestion-service
+
+  kafka:
+    bootstrap-servers: localhost:9092 # Connecting to the Kafka broker running inside Docker
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    properties:
+      # Firma el envío con la etiqueta "instrument"
+      spring.json.type.mapping: "instrument:com.alpex.ingestion_service.dto.FinancialInstrumentDTO"
+logging:
+  level:
+    root: INFO
+    org.apache.kafka: WARN
+    org.springframework.kafka: WARN

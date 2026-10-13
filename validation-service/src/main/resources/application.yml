@@ -1,0 +1,28 @@
+server:
+  port: 8082 #run on port 8082
+
+spring:
+  application:
+    name: alpex-validation-service
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: alpex-validation-group
+      #Wrap the reader in an error handler to break infinite loops
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        # Especify the actual background deserializers
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        # Force Spring to use the local DTO class ignoring the neighbor's package
+        spring.json.value.default.type: "com.alpex.validation_service.dto.FinancialInstrumentDTO"
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+logging:
+  level:
+    root: INFO
+    org.apache.kafka: WARN       # Silence the normal Kafka connection messages
+    org.springframework.kafka: WARN # Mute the ordinary Spring-Kafka messages
