@@ -9,7 +9,9 @@ public class CurrencyValidationStrategy implements ValidationStrategy{
     @Override
     public void execute(FinancialInstrumentDTO data) {
         if (data.getCurrency() != null) {
-            data.setCurrency(data.getCurrency().trim().toUpperCase());
+
+            String cleanCurrency = data.getCurrency().trim().toUpperCase();
+            data.setCurrency(cleanCurrency);
         }
     }
 }
