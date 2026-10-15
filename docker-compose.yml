@@ -1,4 +1,17 @@
 services:
+  # 💻 Capa de Visualización: Administrador gráfico nativo para la base de datos
+  pgadmin-db:
+    image: dpage/pgadmin4:8.9
+    container_name: alpex-pgadmin-web
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@alpex.com
+      PGADMIN_DEFAULT_PASSWORD: password_seguro_123
+      TZ: Europe/Zurich
+    ports:
+      - "8080:80" # Abrirá el panel en tu navegador web local en el puerto 8080
+    networks:
+      - alpex-production-network
   # Capa de Almacenamiento
   postgres-db:
     image: postgres:16.4-alpine
@@ -102,3 +115,4 @@ volumes:
 networks:
   alpex-production-network:
     driver: bridge
+

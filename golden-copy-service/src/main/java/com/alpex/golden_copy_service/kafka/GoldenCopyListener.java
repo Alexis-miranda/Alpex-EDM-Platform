@@ -1,6 +1,7 @@
 package com.alpex.golden_copy_service.kafka;
 
 import com.alpex.golden_copy_service.model.DataExceptionEntity;
+import com.alpex.golden_copy_service.model.FinancialInstrumentDTO;
 import com.alpex.golden_copy_service.model.GoldenInstrument;
 import com.alpex.golden_copy_service.repository.DataExceptionRepository;
 import com.alpex.golden_copy_service.repository.GoldenInstrumentRepository;
@@ -21,64 +22,40 @@ public class GoldenCopyListener {
 
 
     private final GoldenInstrumentRepository instrumentRepository;
-    private final DataExceptionRepository exceptionRepository;
 
-
-    public GoldenCopyListener(GoldenInstrumentRepository instrumentRepository, DataExceptionRepository exceptionRepository) {
+    public GoldenCopyListener(GoldenInstrumentRepository instrumentRepository) {
         this.instrumentRepository = instrumentRepository;
-        this.exceptionRepository = exceptionRepository;
     }
 
-    /**
-     *  Save the clean, purified data.
+    /*
+     * Consume verified events from Kafka and persist into golden_instruments catalog
      */
-    @KafkaListener(topics = "data-validated", groupId = "alpex-golden-copy-group")
+    @KafkaListener(topics = "data-ingested", groupId = "alpex-golden-copy-group")
     @Transactional
-    public void consumeAndPersistGoldenCopy(Map<String, Object> cleanData) {
-        System.out.println("LOG: Clean event caught from Kafka for ticker: " + cleanData.get("ticker"));
+    public void consumeAndPersistGoldenCopy(FinancialInstrumentDTO dto) {
+        System.out.println("LOG: Cleansed market event caught for ticker: " + dto.getTicker());
 
-        GoldenInstrument instrument = new GoldenInstrument();
-        instrument.setIsin((String) cleanData.get("isin"));
-        instrument.setTicker((String) cleanData.get("ticker"));
-        instrument.setName((String) cleanData.get("name"));
+        try {
+            GoldenInstrument instrument = new GoldenInstrument();
 
-        Double priceRaw = (Double) cleanData.get("price");
-        instrument.setPrice(BigDecimal.valueOf(priceRaw));
+            // Map standard database master fields
+            instrument.setIsin(dto.getIsin());
+            instrument.setTicker(dto.getTicker());
+            instrument.setPrice(dto.getPrice());
+            instrument.setCurrency(dto.getCurrency());
+            instrument.setPrimary_source(dto.getPrimary_source());
 
-        instrument.setCurrency((String) cleanData.get("currency"));
-        instrument.setMasteredBy("alpex-golden-copy-service");
-        instrument.setPrimarySource((String) cleanData.get("provider"));
-        instrument.setUpdatedAt(LocalDateTime.now());
+            // Map native numeric metrics from real-time Yahoo Finance payload
+            instrument.setOpenPrice(dto.getOpenPrice());
+            instrument.setVolume(dto.getVolume());
+            instrument.setPercentChange(dto.getPercentChange());
 
-        instrumentRepository.save(instrument);
-        System.out.println("DATABASE_SUCCESS: Golden Copy committed to pgAdmin for ISIN: " + instrument.getIsin());
-    }
+            instrumentRepository.save(instrument);
+            System.out.println("DATABASE_SUCCESS: Golden Copy committed to pgAdmin for ISIN: " + instrument.getIsin());
 
-    /**
-     *  Capture and store rejected exceptions for auditing in Tableau.
-     */
-    @KafkaListener(topics = "data-exceptions", groupId = "alpex-golden-copy-group")
-    @Transactional
-    public void consumeAndPersistExceptions(Map<String, Object> dirtyData) {
-        System.out.println("LOG_WARNING: Dirty record caught from exceptions channel for ticker: " + dirtyData.get("ticker"));
-
-        DataExceptionEntity exception = new DataExceptionEntity();
-        exception.setIsin((String) dirtyData.get("isin"));
-        exception.setTicker((String) dirtyData.get("ticker"));
-
-        if (dirtyData.get("price") != null) {
-            Double priceRaw = (Double) dirtyData.get("price");
-            exception.setPrice(BigDecimal.valueOf(priceRaw));
+        } catch (Exception e) {
+            System.out.println("LOG_ERROR: Database persistence write rejected: " + e.getMessage());
         }
-
-        exception.setCurrency((String) dirtyData.get("currency"));
-        exception.setPrimarySource((String) dirtyData.get("provider"));
-
-        // Simulación lógica de motivo de auditoría corporativa
-        exception.setRejectionReason("CRITICAL_AUDIT: Structural constraint or negative metadata threshold anomaly.");
-        exception.setRejectedAt(LocalDateTime.now());
-
-        exceptionRepository.save(exception);
-        System.out.println("DATABASE_AUDIT: Dirty exception successfully logged in pgAdmin for evaluation.");
     }
+
 }

@@ -34,11 +34,39 @@ public class DataExceptionEntity {
 
     @Column(name = "rejected_at")
     private LocalDateTime rejectedAt = LocalDateTime.now();
-
+    // Financial analytics fields synchronized with market structure
+    private Double openPrice;
+    private Long volume;
+    private Double percentChange;
     // Constructor por defecto
     public DataExceptionEntity() {}
 
     // Getters and Setters
+
+    public Double getPercentChange() {
+        return percentChange;
+    }
+
+    public void setPercentChange(Double percentChange) {
+        this.percentChange = percentChange;
+    }
+
+    public Double getOpenPrice() {
+        return openPrice;
+    }
+
+    public void setOpenPrice(Double openPrice) {
+        this.openPrice = openPrice;
+    }
+
+    public Long getVolume() {
+        return volume;
+    }
+
+    public void setVolume(Long volume) {
+        this.volume = volume;
+    }
+
     public Integer getExceptionId() { return exceptionId; }
     public void setExceptionId(Integer exceptionId) { this.exceptionId = exceptionId; }
 
