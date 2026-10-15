@@ -1,42 +1,104 @@
 services:
-  # Centralized SQL Database
+  # Capa de Almacenamiento
   postgres-db:
-    image: postgres:16-alpine
-    container_name: apex-postgres
+    image: postgres:16.4-alpine
+    container_name: alpex-postgres-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_NAME}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+      TZ: Europe/Zurich
     ports:
       - "5433:5432"
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB_NAME}
-      - POSTGRES_USER=${POSTGRES_ADMIN_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_production_data:/var/lib/postgresql/data
     networks:
-      - alpex-network
+      - alpex-production-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Apache Kafka Event Bus (Stable Native KRaft Mode)
+  # Capa de Mensajería: Apache Kafka & Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: alpex-zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      TZ: Europe/Zurich
+    networks:
+      - alpex-production-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   kafka:
-    image: apache/kafka:latest
-    container_name: apex-kafka
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: alpex-kafka-broker
+    restart: always
+    depends_on:
+      - zookeeper
     ports:
       - "9092:9092"
     environment:
-      - KAFKA_NODE_ID=1
-      - KAFKA_PROCESS_ROLES=broker,controller
-      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
-      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093
-      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
-      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:2181,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      TZ: Europe/Zurich
     networks:
-      - alpex-network
+      - alpex-production-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MICROSERVICIOS JAVA (Compilación Automática en la Nube)
+  ingestion-service:
+    build: ./ingestion-service
+    container_name: alpex-ingestion-service
+    restart: always
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8081"
+    environment:
+      - MARKET_API_KEY=${MARKET_API_KEY}
+    networks:
+      - alpex-production-network
+
+  validation-service:
+    build: ./validation-service
+    container_name: alpex-validation-service
+    restart: always
+    depends_on:
+      - kafka
+    networks:
+      - alpex-production-network
+
+  golden-copy-service:
+    build: ./golden-copy-service
+    container_name: alpex-golden-copy-service
+    restart: always
+    depends_on:
+      - postgres-db
+      - kafka
+    networks:
+      - alpex-production-network
 
 volumes:
-  postgres_data:
+  postgres_production_data:
+    driver: local
 
 networks:
-  alpex-network:
+  alpex-production-network:
     driver: bridge

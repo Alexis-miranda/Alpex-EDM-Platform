@@ -5,7 +5,7 @@ spring:
   application:
     name: alpex-validation-service
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: alpex-kafka-broker:2181
     consumer:
       group-id: alpex-validation-group
       #Wrap the reader in an error handler to break infinite loops
