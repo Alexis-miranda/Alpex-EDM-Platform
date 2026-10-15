@@ -1,7 +1,7 @@
 
 FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /app
-COPY . .
+COPY src/main/java/com/alpex/ingestion_service .
 # Compilamos el archivo JAR saltándonos los test para agilizar el despliegue Cloud
 RUN ./mvnw clean package -DskipTests
 

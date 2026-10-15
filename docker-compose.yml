@@ -72,7 +72,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - MARKET_API_KEY=${MARKET_API_KEY}
+      - MARKET_DATA_URL=${MARKET_DATA_URL}
     networks:
       - alpex-production-network
 

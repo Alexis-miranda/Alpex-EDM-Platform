@@ -12,6 +12,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+/***
+ * GoldenCopyListener
+ * Listens for golden copy events and triggers the corresponding processing logic.
+ */
 @Component
 public class GoldenCopyListener {
 
