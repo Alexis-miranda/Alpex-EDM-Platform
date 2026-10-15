@@ -105,6 +105,10 @@ services:
     depends_on:
       - postgres-db
       - kafka
+    environment:
+      - POSTGRES_DB_NAME=${POSTGRES_DB_NAME}
+      - POSTGRES_ADMIN_USER=${POSTGRES_ADMIN_USER}
+      - POSTGRES_ADMIN_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
     networks:
       - alpex-production-network
 

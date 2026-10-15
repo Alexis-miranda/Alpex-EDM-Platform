@@ -23,7 +23,7 @@ spring:
 
   #  KAFKA CONFIGURATION
   kafka:
-    bootstrap-servers: alpex-kafka-broker:2181
+    bootstrap-servers: kafka:9092
     consumer:
       group-id: alpex-golden-copy-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer

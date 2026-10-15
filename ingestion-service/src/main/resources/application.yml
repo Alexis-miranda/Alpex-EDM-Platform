@@ -6,7 +6,7 @@ spring:
     name: alpex-ingestion-service
 
   kafka:
-    bootstrap-servers: alpex-kafka-broker:2181 # Connecting to the Kafka broker running inside Docker
+    bootstrap-servers: kafka:9092 # Connecting to the Kafka broker running inside Docker
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
