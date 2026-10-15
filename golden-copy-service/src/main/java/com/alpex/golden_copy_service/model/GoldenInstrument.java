@@ -36,10 +36,45 @@ public class GoldenInstrument {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    // Financial metrics added for Yahoo Finance real-time streams
+    private Double openPrice;
+    private Long volume;
+    private Double percentChange;
+
     // Default Constructor
     public GoldenInstrument() {}
 
+    public void setPercentChange(Double percentChange) {
+        this.percentChange = percentChange;
+    }
+
+
+
+
+
+
+
     // Getters and Setters
+
+    public Double getOpenPrice() {
+        return openPrice;
+    }
+
+    public void setOpenPrice(Double openPrice) {
+        this.openPrice = openPrice;
+    }
+
+    public Long getVolume() {
+        return volume;
+    }
+
+    public void setVolume(Long volume) {
+    }
+
+    public Double getPercentChange() {
+        return percentChange;
+    }
+
     public String getIsin() { return isin; }
     public void setIsin(String isin) { this.isin = isin; }
 
