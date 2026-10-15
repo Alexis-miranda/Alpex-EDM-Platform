@@ -50,4 +50,37 @@ public class MarketDataIngestionJob {
                 new FinancialInstrumentDTO(null, "BAD_TICK", 0.0, "EUR", "Bloomberg")
         );
     }
+
+    /**
+     * High-velocity performance testing engine to simulate live market data bursts.
+     */
+    public void executeStressTest(int totalRecords) {
+        System.out.println("LOG: Initiating performance test burst of " + totalRecords + " messages...");
+
+        String[] providers = {"Bloomberg", "Reuters"};
+        String[] currencies = {"chf", "usd", "eur", "  usd  ", "CHF"};
+
+        for (int i = 0; i < totalRecords; i++) {
+            String ticker = "STRESS_" + i;
+            String provider = providers[i % 2];
+            String currency = currencies[i % 5];
+
+            // Simulación de anomalías matemáticas (Precios negativos aleatorios)
+            double price = (Math.random() * 400) - 50; // Precios entre -50 y 350
+
+            // Provocar ISINs nulos a propósito cada 20 registros para alimentar la tabla de errores
+          //  String isin = (i % 20 == 0) ? null : "US_STRESS_" + i;
+
+            // S_ + 999 = 5 caracteres máximo. Totalmente inmune al límite de VARCHAR(12) de pgAdmin
+            String isin = (i % 20 == 0) ? null : "S_" + i;
+
+            FinancialInstrumentDTO record = new FinancialInstrumentDTO(isin, ticker, price, currency, provider);
+
+            // Envío asíncrono inmediato a Kafka
+            kafkaTemplate.send(TOPIC, record.getIsin(), record);
+        }
+        System.out.println("LOG: Performance burst successfully dispatched into Kafka cluster.");
+    }
+
+
 }

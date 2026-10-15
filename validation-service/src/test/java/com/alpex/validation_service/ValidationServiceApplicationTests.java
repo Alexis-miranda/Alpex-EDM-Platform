@@ -31,13 +31,11 @@ class ValidationServiceApplicationTests {
 
 	@Test
 	void shouldConvertCurrencyToUppercaseAndTrimSpaces() {
-		// 1. GIVEN: Datos sucios de entrada
+
 		FinancialInstrumentDTO mockInstrument = new FinancialInstrumentDTO("US0378331005", "AAPL", 175.50, "  usd  ", "Bloomberg");
 
-		// 2. WHEN: Ejecutamos tu estrategia corregida
 		currencyStrategy.execute(mockInstrument);
 
-		// 3. THEN: Ahora el assert pasará en verde perfecto
 		assertEquals("USD", mockInstrument.getCurrency(), "La divisa debió ser limpiada y pasada a mayúsculas.");
 	}
 
